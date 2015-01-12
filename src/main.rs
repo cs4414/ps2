@@ -55,7 +55,7 @@ impl <'a>Shell<'a> {
             }
         }).collect();
 
-        match argv.head() {
+        match argv.first() {
             Some(&program) => self.run_cmd(program, argv.tail()),
             None => (),
         };
