@@ -3,3 +3,6 @@
 name = "ps2"
 version = "0.0.1"
 authors = ["Weilin Xu <mzweilin@gmail.com>", "David Evans <evans@virginia.edu>"]
+
+[dependencies]
+getopts = "*"

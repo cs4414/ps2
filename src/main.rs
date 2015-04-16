@@ -11,12 +11,10 @@
 
 extern crate getopts;
 
-use getopts::{optopt, getopts};
-use std::io::BufferedReader;
-use std::io::Command;
-use std::io::stdin;
-use std::{io, os};
-use std::str;
+use getopts::Options;
+use std::env;
+use std::io::{self, Write};
+use std::process::Command;
 
 struct Shell<'a> {
     cmd_prompt: &'a str,
@@ -28,13 +26,16 @@ impl <'a>Shell<'a> {
     }
 
     fn run(&self) {
-        let mut stdin = BufferedReader::new(stdin());
+        let mut stdin = io::stdin();
+        let mut stdout = io::stdout();
 
         loop {
-            io::stdio::print(self.cmd_prompt.as_slice());
-            io::stdio::flush();
+            stdout.write(self.cmd_prompt.as_bytes()).unwrap();
+            stdout.flush().unwrap();
 
-            let line = stdin.read_line().unwrap();
+            let mut line = String::new();
+
+            stdin.read_line(&mut line).unwrap();
             let cmd_line = line.trim();
             let program = cmd_line.splitn(1, ' ').nth(0).expect("no program");
 
@@ -56,14 +57,14 @@ impl <'a>Shell<'a> {
         }).collect();
 
         match argv.first() {
-            Some(&program) => self.run_cmd(program, argv.tail()),
+            Some(&program) => self.run_cmd(program, &argv[1..]),
             None => (),
         };
     }
 
     fn run_cmd(&self, program: &str, argv: &[&str]) {
         if self.cmd_exists(program) {
-            io::stdio::print(str::from_utf8(Command::new(program).args(argv).output().unwrap().output.as_slice()).unwrap());
+            io::stdout().write(&Command::new(program).args(argv).output().unwrap().stdout).unwrap();
         } else {
             println!("{}: command not found", program);
         }
@@ -76,20 +77,19 @@ impl <'a>Shell<'a> {
 
 fn get_cmdline_from_args() -> Option<String> {
     /* Begin processing program arguments and initiate the parameters. */
-    let args = os::args();
+    let args: Vec<_> = env::args().collect();
 
-    let opts = &[
-        getopts::optopt("c", "", "", "")
-    ];
+    let mut opts = Options::new();
+    opts.optopt("c", "", "", "");
 
-    getopts::getopts(args.tail(), opts).unwrap().opt_str("c")
+    opts.parse(&args[1..]).unwrap().opt_str("c")
 }
 
 fn main() {
     let opt_cmd_line = get_cmdline_from_args();
 
     match opt_cmd_line {
-        Some(cmd_line) => Shell::new("").run_cmdline(cmd_line.as_slice()),
+        Some(cmd_line) => Shell::new("").run_cmdline(&cmd_line),
         None           => Shell::new("gash > ").run(),
     }
 }
