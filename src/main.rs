@@ -2,7 +2,7 @@
 // gash.rs
 //
 // Starting code for PS2
-// Running on Rust 0.9
+// Running on Rust 1+
 //
 // University of Virginia - cs4414 Spring 2014
 // Weilin Xu, David Evans
@@ -26,7 +26,7 @@ impl <'a>Shell<'a> {
     }
 
     fn run(&self) {
-        let mut stdin = io::stdin();
+        let stdin = io::stdin();
         let mut stdout = io::stdout();
 
         loop {
